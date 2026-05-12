@@ -1,49 +1,337 @@
+```html
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>FireGuard IoT | Sistem Deteksi Kebakaran Real-time</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <script src="https://unpkg.com/mqtt@5.5.0/dist/mqtt.min.js"></script>
-    <link rel="stylesheet" href="style.css">
-    <script src="script.jss" defer></script>
+
+<meta charset="UTF-8">
+
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0">
+
+<title>FireGuard IoT</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+
+<style>
+
+body{
+    font-family: Arial;
+    background:#111827;
+    color:white;
+    margin:0;
+    padding:20px;
+}
+
+.card{
+    background:#1f2937;
+    padding:20px;
+    border-radius:16px;
+    margin-bottom:20px;
+}
+
+.grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+    gap:20px;
+}
+
+.value{
+    font-size:40px;
+    font-weight:bold;
+}
+
+.green{color:#10b981;}
+.yellow{color:#f59e0b;}
+.red{color:#ef4444;}
+
+.status{
+    font-size:30px;
+    font-weight:bold;
+}
+
+canvas{
+    background:white;
+    border-radius:10px;
+    padding:10px;
+}
+
+</style>
+
 </head>
+
 <body>
-<div class="login-overlay" id="loginOverlay">
-    <div class="login-container">
-        <div class="login-brand">
-            <div class="login-icon"><i class="fas fa-fire-extinguisher"></i></div>
-            <h2>FireGuard IoT</h2>
-            <p>Sistem Deteksi Kebakaran Cerdas</p>
-        </div>
-        <div class="login-form">
-            <div class="input-group"><i class="fas fa-user"></i><input type="text" id="loginUsername" placeholder="Username" autocomplete="off"></div>
-            <div class="input-group"><i class="fas fa-lock"></i><input type="password" id="loginPassword" placeholder="Password"></div>
-            <button id="loginBtn" class="login-btn"><span>MASUK DASHBOARD</span><i class="fas fa-arrow-right"></i></button>
-            <div class="login-hint"><small>Demo: admin / admin123</small></div>
-        </div>
-    </div>
+
+<h1>🔥 FireGuard IoT Dashboard</h1>
+
+<div class="card">
+
+<h2 id="status"
+class="status green">
+
+AMAN
+
+</h2>
+
+<p id="mqttStatus">
+MQTT Connecting...
+</p>
+
 </div>
-<div class="dashboard-wrapper" id="dashboardWrapper">
-    <div class="fire-overlay" id="fireOverlay"></div>
-    <div class="toast" id="toast"></div>
-    <div class="main-container">
-        <div class="top-bar">
-            <div class="top-left"><div class="app-icon icon-aman" id="appIcon"><i class="fas fa-shield-halved"></i></div><div><h1 class="dashboard-title">🔥 FireGuard IoT</h1><span class="dashboard-subtitle">MQTT Real-time · 7 Mode Prioritas</span></div></div>
-            <div class="top-right"><div class="conn-status" id="mqttStatusBtn"><div class="conn-dot" id="connDot"></div><span id="connLabel">MQTT: Menghubung...</span></div><div class="status-badge" id="statusBadge"><span>✅ SISTEM AMAN</span></div><button class="icon-btn" id="darkToggle" title="Mode Gelap"><i class="fas fa-moon"></i></button><button class="icon-btn" id="logoutBtn" title="Keluar"><i class="fas fa-sign-out-alt"></i></button></div>
-        </div>
-        <div class="risk-card"><div class="risk-score"><div class="score-circle" id="scoreCircle">0%</div><div class="risk-info"><h3>Skor Risiko Kebakaran</h3><p id="scoreDesc">Menunggu data sensor...</p></div></div><div class="risk-trigger"><i class="fas fa-exclamation-triangle"></i><span id="triggerText">0/4 sensor terpicu</span></div></div>
-        <div class="sensor-grid" id="sensorGrid"></div>
-        <div class="output-grid" id="outputGrid"></div>
-        <div class="control-bar"><button class="btn btn-outline" id="btnThreshold"><i class="fas fa-sliders-h"></i> Atur Threshold</button><button class="btn btn-outline" id="btnClearLog"><i class="fas fa-trash-alt"></i> Hapus Log</button></div>
-        <div class="log-section"><div class="log-header"><h3><i class="fas fa-history"></i> Riwayat Kejadian</h3><div class="log-filters"><button class="log-filter-btn active" data-filter="all">Semua</button><button class="log-filter-btn" data-filter="status">Status</button><button class="log-filter-btn" data-filter="sensor">Sensor</button></div></div><div class="log-container"><table class="log-table"><thead><tr><th>Waktu</th><th>Event</th><th>Status</th><th>MQ2</th><th>Api</th><th>Ruangan</th><th>Hum</th></tr></thead><tbody id="logBody"><tr><td colspan="7" class="log-empty">🔍 Menunggu data MQTT...</td></tr></tbody></table></div></div>
-    </div>
+
+<div class="grid">
+
+<div class="card">
+<h3>MQ2</h3>
+<div id="gas"
+class="value">0</div>
 </div>
-<div class="modal" id="thresholdModal"><div class="modal-content"><div class="modal-header"><h3><i class="fas fa-sliders-h"></i> Atur Threshold Sensor</h3><button class="modal-close" id="closeModalBtn">&times;</button></div><div class="modal-body"><div class="threshold-item"><label>MQ2 Gas (analog)</label><input type="number" id="thGas" value="2000" step="100"></div><div class="threshold-item"><label>Suhu Api Bahaya (°C)</label><input type="number" id="thFireDanger" value="70" step="1"></div><div class="threshold-item"><label>Suhu Api Waspada (°C)</label><input type="number" id="thFireWarn" value="50" step="1"></div><div class="threshold-item"><label>Suhu Ruangan Panas (°C)</label><input type="number" id="thRoomHot" value="40" step="1"></div><div class="threshold-item"><label>Kelembaban Kering (%)</label><input type="number" id="thHumDry" value="50" step="5"></div></div><div class="modal-footer"><button class="btn btn-secondary" id="cancelModalBtn">Batal</button><button class="btn btn-primary" id="saveThresholdBtn">Simpan</button></div></div></div>
+
+<div class="card">
+<h3>Api</h3>
+<div id="api"
+class="value">0</div>
+</div>
+
+<div class="card">
+<h3>Room</h3>
+<div id="room"
+class="value">0</div>
+</div>
+
+<div class="card">
+<h3>Humidity</h3>
+<div id="hum"
+class="value">0</div>
+</div>
+
+</div>
+
+<div class="card">
+
+<canvas id="chart"></canvas>
+
+</div>
+
+<script>
+
+const BROKER =
+'wss://broker.emqx.io:8084/mqtt';
+
+const TOPIC =
+'fire_detector/data';
+
+const mqttStatus =
+document.getElementById(
+'mqttStatus'
+);
+
+const statusText =
+document.getElementById(
+'status'
+);
+
+const gasText =
+document.getElementById(
+'gas'
+);
+
+const apiText =
+document.getElementById(
+'api'
+);
+
+const roomText =
+document.getElementById(
+'room'
+);
+
+const humText =
+document.getElementById(
+'hum'
+);
+
+// CHART
+
+const ctx =
+document.getElementById(
+'chart'
+);
+
+const chart =
+new Chart(ctx, {
+
+type:'line',
+
+data:{
+labels:[],
+datasets:[
+{
+label:'MQ2',
+data:[]
+},
+{
+label:'API',
+data:[]
+},
+{
+label:'ROOM',
+data:[]
+},
+{
+label:'HUM',
+data:[]
+}
+]
+},
+
+options:{
+responsive:true
+}
+
+});
+
+// MQTT
+
+const client = mqtt.connect(
+BROKER
+);
+
+client.on(
+'connect',
+()=>{
+
+console.log(
+'MQTT CONNECTED'
+);
+
+mqttStatus.innerHTML =
+'✅ MQTT Connected';
+
+client.subscribe(
+TOPIC
+);
+
+}
+);
+
+client.on(
+'message',
+(topic,message)=>{
+
+const data =
+JSON.parse(
+message.toString()
+);
+
+console.log(data);
+
+gasText.innerHTML =
+data.gas;
+
+apiText.innerHTML =
+data.objectTemp;
+
+roomText.innerHTML =
+data.roomTemp;
+
+humText.innerHTML =
+data.humidity;
+
+statusText.innerHTML =
+data.status;
+
+statusText.className =
+'status';
+
+if(data.status === 'AMAN'){
+
+statusText.classList.add(
+'green'
+);
+
+}
+else if(
+data.status === 'WASPADA'
+){
+
+statusText.classList.add(
+'yellow'
+);
+
+}
+else{
+
+statusText.classList.add(
+'red'
+);
+
+}
+
+// CHART
+
+const time =
+new Date()
+.toLocaleTimeString();
+
+chart.data.labels.push(
+time
+);
+
+chart.data.datasets[0]
+.data.push(data.gas);
+
+chart.data.datasets[1]
+.data.push(data.objectTemp);
+
+chart.data.datasets[2]
+.data.push(data.roomTemp);
+
+chart.data.datasets[3]
+.data.push(data.humidity);
+
+if(
+chart.data.labels.length > 15
+){
+
+chart.data.labels.shift();
+
+chart.data.datasets.forEach(
+d=>d.data.shift()
+);
+
+}
+
+chart.update();
+
+}
+);
+
+client.on(
+'error',
+(err)=>{
+
+console.log(err);
+
+mqttStatus.innerHTML =
+'❌ MQTT Error';
+
+}
+);
+
+client.on(
+'close',
+()=>{
+
+mqttStatus.innerHTML =
+'⚠️ MQTT Disconnect';
+
+}
+);
+
+</script>
+
 </body>
 </html>
+```
